@@ -1,26 +1,53 @@
-import os
 import pandas as pd
+import torch
 from torch.utils.data import Dataset
-import skvideo.io
 import numpy as np
+from pathlib import Path
+import cv2
+import json
+
+# ---------Paths-------- #
+ANNOTATIONS_FILE = Path("../../.", "data/processed", "ydata-tvsum50-anno-cleaned.csv")
+VIDEO_DIR = Path("../../.", "data/raw")
+
+
+# --------Metadata File--------- #
+# NOTE: If this fails, try generating the file by running python metadata_check.py
+with open("../../references/tvsum_metadata.json", "r") as f:
+  metadata = json.load(f)
 
 class VideoDataset(Dataset):
   def __init__(self, annotations_file, video_dir):
     self.annotations = pd.read_csv(annotations_file)
-    self.video_dir = video_dir
+    self.video_dir = Path(video_dir)
   
   def __len__(self):
     return len(self.video_dir)
   
   def __getitem__(self, idx):
-    video_path = os.path.join(self.video_dir)
+    video_path = list(VIDEO_DIR.iterdir())[idx]
     annotation_row = self.annotations.iloc[idx]
-    videodata = ""
+    videodata = self.video_to_frames(video_path, idx)
     return_dict = {
       "video_data": videodata,
-      "annotations": annotation_row["ANNOTATIONS"],
-      "video_path": video_path
+      "annotations": annotation_row[2],
+      "video_path": str(video_path)
     }
-    return return_dict 
+    return return_dict
+  
+  def video_to_frames(self, video_path, idx):
+    cap = cv2.VideoCapture(video_path)
+    count = 0
+    zero_tensor = torch.zeros((cap.shape[0], cap.shape[1], cap.shape[2], metadata[idx]["frameCount"]))
+    while True:
+      ret, img = cap.read()
+      img = torch.from_numpy(img)
+      zero_tensor[:,:,:, count] = img
+      count += 1
+      # gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-dataset = VideoDataset(annotations_file="./tvsum50_ver_1_1/data/ydata-tvsum50-anno-cleaned.csv", video_dir="C:/Users/david/Documents/DAP/python_zoo/ai_stuff/video_summarization/Datasets/tvsum50_ver_1_1/videos/")
+      key = cv2.waitKey(1)
+      if key == ord("q"):
+        break
+  
+#dataset = VideoDataset(annotations_file= ANNOTATIONS_FILE, video_dir=VIDEO_DIR)
