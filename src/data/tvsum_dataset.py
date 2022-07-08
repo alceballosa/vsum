@@ -2,24 +2,22 @@ import json
 from pathlib import Path
 
 import cv2
+import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data import random_split
+from utils import helpers
 
 
 def get_dataset():
     # ---------Paths-------- #
-    ANNOTATIONS_FILE = Path(
-        "../../.", "data/processed", "ydata-tvsum50-anno-cleaned.csv"
+    path_root = helpers.get_project_root()
+    ANNOTATIONS_FILE = path_root / "data/processed" / "ydata-tvsum50-anno-cleaned.csv"
+    FEATURES_DIR = Path(
+        "/home/alberto/workspace/video-summarization/datasets/tv-sum/extracted_features/i3d"
     )
-    VIDEO_DIR = Path("../../.", "data/raw")
-
-    # --------Metadata File--------- #
-    # NOTE: If this fails, try generating the file by running python metadata_check.py
-    with open("../../references/tvsum_metadata.json", "r") as f:
-        metadata = json.load(f)
-    dataset = VideoDataset(annotations_file=ANNOTATIONS_FILE, video_dir=VIDEO_DIR)
+    dataset = VideoDataset(annotations_file=ANNOTATIONS_FILE, features_dir=FEATURES_DIR)
     train_size = int(0.8 * len(dataset))
     test_size = len(dataset) - train_size
     train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
@@ -27,21 +25,28 @@ def get_dataset():
 
 
 class VideoDataset(Dataset):
-    def __init__(self, annotations_file, video_dir):
+    def __init__(self, annotations_file: Path, features_dir: Path):
         self.annotations = pd.read_csv(annotations_file)
-        self.video_dir = Path(video_dir)
+        self.features_dir = features_dir
 
     def __len__(self):
-        return len(self.video_dir)
+        return len(self.annotations)
 
-    def __getitem__(self, idx):
-        video_path = list(VIDEO_DIR.iterdir())[idx]
+    def __getitem__(self, idx: int) -> dict:
+        path_features = self.features_dir
         annotation_row = self.annotations.iloc[idx]
-        videodata = self.video_to_frames(video_path, idx)
+
+        id_video = annotation_row["ID"]
+        # annotations are saved as a string, turn them into a list of values
+        annotations = annotation_row[" ANNOTATIONS"].replace("\n", "").split(",")
+        annotations = np.array(list(map(int, annotations)))
+        path_features = self.features_dir / (id_video + "_rgb.npy")
+
+        X = np.load(path_features)
         return_dict = {
-            "video_data": videodata,
-            "annotations": annotation_row[2],
-            "video_path": str(video_path),
+            "X": torch.from_numpy(X),
+            "y": torch.from_numpy(annotations),
+            "video_path": str(path_features),
         }
         return return_dict
 

@@ -30,3 +30,7 @@ def read_config_file(filepath: Path) -> configparser.ConfigParser:
     config = configparser.ConfigParser()
     config.read(filepath)
     return config
+
+
+def get_project_root() -> Path:
+    return Path(__file__).parent.parent.parent

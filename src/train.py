@@ -18,10 +18,10 @@ from data import tvsum_dataset
 from utils import helpers
 
 
-
 def train(cfg):
     cudnn.benchmark = True
     cudnn.enabled = True
+
     cfg = Box(helpers.parse_dict(cfg))
 
     if torch.cuda.is_available():
@@ -30,6 +30,11 @@ def train(cfg):
     else:
         device = torch.device("cpu")
         print("Using CPU...")
+
+    dataset_train, dataset_test = tvsum_dataset.get_dataset()
+
+    sample = dataset_train[0]
+    print(sample["y"].shape, sample["X"].shape)
 
 
 if __name__ == "__main__":
