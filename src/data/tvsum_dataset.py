@@ -14,8 +14,10 @@ def get_dataset():
     # ---------Paths-------- #
     path_root = helpers.get_project_root()
     ANNOTATIONS_FILE = path_root / "data/processed" / "ydata-tvsum50-anno-cleaned.csv"
+    # TODO: replace by relative paths as per the script for downloading dataset
     FEATURES_DIR = Path(
-        "/home/alberto/workspace/video-summarization/datasets/tv-sum/extracted_features/i3d"
+        "/home/alberto/workspace/video-summarization/"
+        + "datasets/tv-sum/extracted_features/i3d"
     )
     dataset = VideoDataset(annotations_file=ANNOTATIONS_FILE, features_dir=FEATURES_DIR)
     train_size = int(0.8 * len(dataset))
@@ -35,18 +37,17 @@ class VideoDataset(Dataset):
     def __getitem__(self, idx: int) -> dict:
         path_features = self.features_dir
         annotation_row = self.annotations.iloc[idx]
-
         id_video = annotation_row["ID"]
         # annotations are saved as a string, turn them into a list of values
         annotations = annotation_row[" ANNOTATIONS"].replace("\n", "").split(",")
         annotations = np.array(list(map(int, annotations)))
         path_features = self.features_dir / (id_video + "_rgb.npy")
-
         X = np.load(path_features)
+        # TODO: add path to actual videos for exploratory data analysis
         return_dict = {
             "X": torch.from_numpy(X),
             "y": torch.from_numpy(annotations),
-            "video_path": str(path_features),
+            "features_path": str(path_features),
         }
         return return_dict
 
