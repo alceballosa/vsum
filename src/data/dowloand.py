@@ -12,4 +12,4 @@ def main(url, output):
 if __name__ == "__main__":
     url = "https://drive.google.com/u/0/uc?id=1gOIA55wF16J92VjcYkFkf4FbjAv2OciR&export=download"
     output = "./data/interim/"
-    main()
+    main(url, output)
