@@ -1,7 +1,14 @@
 vidsum
 ==============================
 
-Deep Learning to summary videos
+Exploring deep learning methods for video summarization.
+
+# Source data
+
+Our work is based on the TV-SUM dataset.
+
+<-- # TODO: ADD INFORMATION ON THE DATASET AND HOW TO SET UP THINGS!-->
+
 
 Project Organization
 ------------

@@ -1,7 +1,9 @@
+from pydoc import describe
 import ffmpeg
 import os
 import json
 import cv2
+from pathlib import Path
 
 def describe_video(path):
     cap = cv2.VideoCapture(path)
@@ -11,8 +13,22 @@ def describe_video(path):
     frameRate = int(cap.get(cv2.CAP_PROP_FPS))
     return frameRate, frameHeight, frameWidth, frameCount
     #print(f"Framerate: {frameRate}\nHeightxWidth: {frameHeight}x{frameWidth}\nN_frames: {frameCount}")
+video_dir = Path("../../.", "data/raw")
+savefile_dir = Path("../../references/")
+video_data = []
+
+for tvsum_path in list(video_dir.iterdir()):
+  metadata = ffmpeg.probe(tvsum_path)["streams"][0]
+  frameRate, frameHeight, frameWidth, frameCount = describe_video(str(tvsum_path))
+  data_dict = {"name": tvsum_path.name, "frameRate": frameRate, "frameCount": frameCount, "frameHeight": frameHeight, "frameWidth": frameWidth, "duration": metadata["duration"]}
+  video_data.append(data_dict)
+
+with open("../../references/tvsum_metadata.json", "w") as f:
+  json.dump(video_data, f, indent=4)
 
 
+
+"""
 summe_path = "../Datasets/SumMe/videos"
 summe_mp4_paths = ["../Datasets/SumMe/videos/" + path for path in os.listdir(summe_path) if ".mp4" in path]
 video_data = []
@@ -28,14 +44,4 @@ for summe_mp4_path in summe_mp4_paths:
 
 with open("../fps_duration_SumMe.json", "w") as f:
   json.dump(video_data, f, indent=4)
-
-tvsum_path = "../Datasets/tvsum50_ver_1_1/ydata-tvsum50-v1_1/ydata-tvsum50-video/video"
-tvsum_mp4_paths = ["../Datasets/tvsum50_ver_1_1/ydata-tvsum50-v1_1/ydata-tvsum50-video/video/" + path for path in os.listdir(tvsum_path)]
-video_data = []
-for tvsum_path in tvsum_mp4_paths:
-  metadata = ffmpeg.probe(tvsum_path)["streams"][0]
-  data_dict = {"name": tvsum_path[73:], "framerate": metadata["avg_frame_rate"], "duration": metadata["duration"]}
-  video_data.append(data_dict)
-
-with open("../fps_duration_tvsum.json", "w") as f:
-  json.dump(video_data, f, indent=4)
+"""
