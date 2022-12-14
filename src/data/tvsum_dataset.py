@@ -5,8 +5,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import Dataset
-from torch.utils.data import random_split
+from torch.utils.data import Dataset, random_split
 from utils import helpers
 
 
@@ -19,6 +18,7 @@ def get_dataset():
         "/home/alberto/workspace/video-summarization/"
         + "datasets/tv-sum/extracted_features/i3d"
     )
+
     dataset = VideoDataset(annotations_file=ANNOTATIONS_FILE, features_dir=FEATURES_DIR)
     train_size = int(0.8 * len(dataset))
     test_size = len(dataset) - train_size
@@ -67,6 +67,3 @@ class VideoDataset(Dataset):
             key = cv2.waitKey(1)
             if key == ord("q"):
                 break
-
-
-#
